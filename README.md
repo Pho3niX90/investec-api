@@ -60,6 +60,12 @@ const transactions = await account.getTransactions({
 });
 ```
 
+#### Get pending transactions
+
+```ts
+const transactions = await account.getPendingTransactions();
+```
+
 #### Transfer
 
 ```ts
