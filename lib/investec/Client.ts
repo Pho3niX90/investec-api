@@ -5,8 +5,8 @@ import {
     InvestecBeneficiaryCategory,
     InvestecPayment,
     InvestecPendingTransaction,
+    InvestecPostedTransaction,
     InvestecToken,
-    InvestecTransaction,
     InvestecTransactionTransactionType,
     InvestecTransfer,
     isResponseBad,
@@ -102,6 +102,10 @@ export class Client {
         );
     }
 
+    /**
+     * Get a list of accounts.
+     * @param realm private/business
+     */
     public async getAccounts(realm: Realm = "private"): Promise<Account[]> {
         if (!this.token) {
             throw new Error("client is not set up");
@@ -118,6 +122,9 @@ export class Client {
         return accounts.data.accounts.map((a) => new Account(this, a, realm));
     }
 
+    /**
+     * Get a list of cards.
+     */
     public async getCards(): Promise<Card[]> {
         if (!this.token) {
             throw new Error("client is not set up");
@@ -131,6 +138,11 @@ export class Client {
         return cards.data?.cards?.map((c) => new Card(this, c)) ?? [];
     }
 
+    /**
+     * Get the balance of an account.
+     * @param accountId
+     * @param realm private/business
+     */
     public async getAccountBalance(accountId: string, realm: Realm = "private") {
         if (!this.token) {
             throw new Error("client is not set up");
@@ -151,7 +163,15 @@ export class Client {
         return balance.data;
     }
 
-    public async getTransactions(accountId: string, realm: Realm = "private", {
+    /**
+     * Get a list of transactions for an account.
+     * @param accountId
+     * @param realm private/business
+     * @param fromDate
+     * @param toDate
+     * @param transactionType
+     */
+    public async getPostedTransactions(accountId: string, realm: Realm = "private", {
         fromDate,
         toDate,
         transactionType,
@@ -159,7 +179,7 @@ export class Client {
         fromDate?: string;
         toDate?: string;
         transactionType?: InvestecTransactionTransactionType;
-    }): Promise<InvestecTransaction[]> {
+    }): Promise<InvestecPostedTransaction[]> {
         if (!this.token) {
             throw new Error("client is not set up");
         }
@@ -180,6 +200,11 @@ export class Client {
         return transactions.data.transactions;
     }
 
+    /**
+     * Get a list of pending transactions for an account.
+     * @param accountId
+     * @param realm private/business
+     */
     public async getPendingTransactions(accountId: string, realm: Realm = "private"): Promise<InvestecPendingTransaction[]> {
         if (!this.token) {
             throw new Error("client is not set up");
@@ -201,6 +226,37 @@ export class Client {
         return transactions.data.transactions;
     }
 
+    /**
+     * Get all transactions for an account.
+     * @param accountId
+     * @param realm private/business
+     * @param fromDate
+     * @param toDate
+     * @param transactionType
+     */
+    public async getAllTransactions(accountId: string, realm: Realm = "private", {
+        fromDate,
+        toDate,
+        transactionType,
+    }: {
+        fromDate?: string;
+        toDate?: string;
+        transactionType?: InvestecTransactionTransactionType;
+    }): Promise<(InvestecPostedTransaction | InvestecPendingTransaction)[]> {
+        const [pending, posted] = await Promise.all([await this.getPendingTransactions(accountId, realm), await this.getPostedTransactions(accountId, realm, {
+            fromDate,
+            toDate,
+            transactionType
+        })])
+        return [...pending, ...posted];
+    }
+
+    /**
+     * Transfer funds from one account to another.
+     * @param fromAccountId
+     * @param recipients
+     * @param realm private/business
+     */
     public async transfer(
         fromAccountId: string,
         recipients: Array<{
@@ -239,6 +295,12 @@ export class Client {
         return transferResponse.data.TransferResponses;
     }
 
+    /**
+     * Pay beneficiaries from an account.
+     * @param accountId
+     * @param recipients array of beneficiaries to pay
+     * @param realm private/business
+     */
     public async pay(
         accountId: string,
         recipients: Array<{
@@ -277,6 +339,9 @@ export class Client {
         return transferResponse.data.TransferResponses;
     }
 
+    /**
+     * Get a list of beneficiaries.
+     */
     public async getBeneficiaries(): Promise<InvestecBeneficiary[]> {
         if (!this.token) {
             throw new Error("client is not set up");
@@ -290,6 +355,9 @@ export class Client {
         return beneficiaries.data;
     }
 
+    /**
+     * Get a list of beneficiary categories.
+     */
     public async getBeneficiaryCategories(): Promise<
         InvestecBeneficiaryCategory[]
     > {

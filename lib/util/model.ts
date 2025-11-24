@@ -90,26 +90,20 @@ export interface InvestecAccountBalance {
     currency: string;
 }
 
-export interface InvestecTransaction {
-    accountId: string;
-    type: InvestecTransactionType;
+export interface InvestecPostedTransaction extends InvestecPendingTransaction {
     transactionType: InvestecTransactionTransactionType;
-    status: InvestecTransactionStatus;
-    description: string;
     cardNumber: string;
     postedOrder: number;
     postingDate: string; // ISO8601 date (yyyy-mm-dd)
     valueDate: string; // ISO8601 date (yyyy-mm-dd)
     actionDate: string; // ISO8601 date (yyyy-mm-dd)
-    transactionDate: string; // ISO8601 date (yyyy-mm-dd)
-    amount: number;
     runningBalance: number;
 }
 
 export interface InvestecPendingTransaction {
     accountId: string;
     type: InvestecTransactionType;
-    status: string;
+    status: 'PENDING' | 'POSTED' | 'FAILED';
     description: string;
     transactionDate: string;
     amount: number;
@@ -189,7 +183,7 @@ export type InvestecAccountBalanceResponse =
     InvestecGenericResponse<InvestecAccountBalance>;
 
 export type InvestecAccountTransactionsResponse = InvestecGenericResponse<{
-    transactions: InvestecTransaction[];
+    transactions: InvestecPostedTransaction[];
 }>;
 
 export type InvestecAccountPendingTransactionsResponse = InvestecGenericResponse<{

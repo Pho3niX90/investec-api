@@ -3,7 +3,7 @@ import {
     InvestecAccount,
     InvestecBeneficiary,
     InvestecPayment,
-    InvestecTransaction,
+    InvestecPostedTransaction,
     InvestecTransactionTransactionType,
     InvestecTransfer,
     Realm,
@@ -42,12 +42,24 @@ export class Account implements InvestecAccount {
         fromDate?: string;
         toDate?: string;
         transactionType?: InvestecTransactionTransactionType;
-    }): Promise<InvestecTransaction[]> {
-        return this.client.getTransactions(this.accountId, this.realm, {fromDate, toDate, transactionType});
+    }): Promise<InvestecPostedTransaction[]> {
+        return this.client.getPostedTransactions(this.accountId, this.realm, {fromDate, toDate, transactionType});
     }
 
     public async getPendingTransactions(): Promise<InvestecPendingTransaction[]> {
         return this.client.getPendingTransactions(this.accountId, this.realm);
+    }
+
+    public async getAllTransactions({
+                                        fromDate,
+                                        toDate,
+                                        transactionType,
+                                    }: {
+        fromDate?: string;
+        toDate?: string;
+        transactionType?: InvestecTransactionTransactionType;
+    }): Promise<(InvestecPostedTransaction | InvestecPendingTransaction)[]> {
+        return this.client.getAllTransactions(this.accountId, this.realm, {fromDate, toDate, transactionType});
     }
 
     public async transfer(
