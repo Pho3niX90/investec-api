@@ -2,6 +2,7 @@ import fetch, {Response} from "node-fetch";
 import {
     InvestecAccountBalanceResponse,
     InvestecAccountPaymentResponse,
+    InvestecAccountPendingTransactionsResponse,
     InvestecAccountsResponse,
     InvestecAccountTransactionsResponse,
     InvestecAccountTransferResponse,
@@ -148,6 +149,22 @@ export const createInvestecAPIClient = (
                 }
             );
             return safeResponse<InvestecAccountBalanceResponse>(balanceResponse);
+        },
+
+        getInvestecPendingTransactionsForAccount: async (token: string, accountId: string, realm: Realm = "private"): Promise<InvestecAccountPendingTransactionsResponse> => {
+            const transactionsResponse = await fetch(
+                `${INVESTEC_BASE_URL}/za/${
+                    RealmSelector[realm]
+                }/v1/accounts/${accountId}/pending-transactions`,
+                {
+                    headers: {
+                        ...getBasicHeaders(token),
+                    },
+                }
+            );
+            return safeResponse<InvestecAccountTransactionsResponse>(
+                transactionsResponse
+            );
         },
 
         getInvestecTransactionsForAccount: async (

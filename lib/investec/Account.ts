@@ -1,4 +1,4 @@
-import {Client} from "..";
+import {Client, InvestecPendingTransaction} from "..";
 import {
     InvestecAccount,
     InvestecBeneficiary,
@@ -67,6 +67,27 @@ export class Account implements InvestecAccount {
             await this.client.ApiClient.getInvestecTransactionsForAccount(
                 this.client.token.access_token,
                 {accountId: this.accountId, fromDate, toDate, transactionType},
+                this.realm
+            );
+        if (isResponseBad(transactions)) {
+            throw new Error(
+                `not ok response while getting transactions for account: ${{
+                    accountId: this.accountId,
+                    response: transactions,
+                }}`
+            );
+        }
+        return transactions.data.transactions;
+    }
+
+    public async getPendingTransactions(): Promise<InvestecPendingTransaction[]> {
+        if (!this.client.token) {
+            throw new Error("client is not set up");
+        }
+        const transactions =
+            await this.client.ApiClient.getInvestecPendingTransactionsForAccount(
+                this.client.token.access_token,
+                this.accountId,
                 this.realm
             );
         if (isResponseBad(transactions)) {

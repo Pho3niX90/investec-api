@@ -106,6 +106,15 @@ export interface InvestecTransaction {
     runningBalance: number;
 }
 
+export interface InvestecPendingTransaction {
+    accountId: string;
+    type: InvestecTransactionType;
+    status: string;
+    description: string;
+    transactionDate: string;
+    amount: number;
+}
+
 export interface InvestecTransfer {
     PaymentReferenceNumber: string;
     PaymentDate: string;
@@ -181,6 +190,10 @@ export type InvestecAccountBalanceResponse =
 
 export type InvestecAccountTransactionsResponse = InvestecGenericResponse<{
     transactions: InvestecTransaction[];
+}>;
+
+export type InvestecAccountPendingTransactionsResponse = InvestecGenericResponse<{
+    transactions: InvestecPendingTransaction[];
 }>;
 
 export type InvestecAccountTransferResponse = InvestecGenericResponse<{

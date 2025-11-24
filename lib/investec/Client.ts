@@ -123,7 +123,7 @@ export class Client {
         if (isResponseBad(cards)) {
             throw new Error("not ok response from getting cards: " + cards);
         }
-        return cards.data.cards.map((c) => new Card(this, c));
+        return cards.data.cards?.map((c) => new Card(this, c)) ?? [];
     }
 
     public async getBeneficiaries(): Promise<InvestecBeneficiary[]> {
