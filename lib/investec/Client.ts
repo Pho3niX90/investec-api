@@ -3,7 +3,12 @@ import {
     InvestecAuthResponse,
     InvestecBeneficiary,
     InvestecBeneficiaryCategory,
+    InvestecPayment,
+    InvestecPendingTransaction,
     InvestecToken,
+    InvestecTransaction,
+    InvestecTransactionTransactionType,
+    InvestecTransfer,
     isResponseBad,
     Realm,
     Scope,
@@ -123,7 +128,153 @@ export class Client {
         if (isResponseBad(cards)) {
             throw new Error("not ok response from getting cards: " + cards);
         }
-        return cards.data.cards?.map((c) => new Card(this, c)) ?? [];
+        return cards.data?.cards?.map((c) => new Card(this, c)) ?? [];
+    }
+
+    public async getAccountBalance(accountId: string, realm: Realm = "private") {
+        if (!this.token) {
+            throw new Error("client is not set up");
+        }
+        const balance = await this.ApiClient.getAccountBalance(
+            this.token.access_token,
+            accountId,
+            realm
+        );
+        if (isResponseBad(balance)) {
+            throw new Error(
+                `not ok response while getting account balance: ${{
+                    accountId: accountId,
+                    response: balance,
+                }}`
+            );
+        }
+        return balance.data;
+    }
+
+    public async getTransactions(accountId: string, realm: Realm = "private", {
+        fromDate,
+        toDate,
+        transactionType,
+    }: {
+        fromDate?: string;
+        toDate?: string;
+        transactionType?: InvestecTransactionTransactionType;
+    }): Promise<InvestecTransaction[]> {
+        if (!this.token) {
+            throw new Error("client is not set up");
+        }
+        const transactions =
+            await this.ApiClient.getInvestecTransactionsForAccount(
+                this.token.access_token,
+                {accountId: accountId, fromDate, toDate, transactionType},
+                realm
+            );
+        if (isResponseBad(transactions)) {
+            throw new Error(
+                `not ok response while getting transactions for account: ${{
+                    accountId: accountId,
+                    response: transactions,
+                }}`
+            );
+        }
+        return transactions.data.transactions;
+    }
+
+    public async getPendingTransactions(accountId: string, realm: Realm = "private"): Promise<InvestecPendingTransaction[]> {
+        if (!this.token) {
+            throw new Error("client is not set up");
+        }
+        const transactions =
+            await this.ApiClient.getInvestecPendingTransactionsForAccount(
+                this.token.access_token,
+                accountId,
+                realm
+            );
+        if (isResponseBad(transactions)) {
+            throw new Error(
+                `not ok response while getting transactions for account: ${{
+                    accountId: accountId,
+                    response: transactions,
+                }}`
+            );
+        }
+        return transactions.data.transactions;
+    }
+
+    public async transfer(
+        fromAccountId: string,
+        recipients: Array<{
+            account: Account;
+            myReference: string;
+            theirReference: string;
+            amount: number;
+        }>,
+        realm: Realm = "private"
+    ): Promise<InvestecTransfer[]> {
+        if (!this.token) {
+            throw new Error("client is not set up");
+        }
+        const transferResponse =
+            await this.ApiClient.postInvestecTransferMultiple(
+                this.token.access_token,
+                {
+                    fromAccountId: fromAccountId,
+                    toAccounts: recipients.map((r) => ({
+                        accountId: r.account.accountId,
+                        amount: r.amount,
+                        myReference: r.myReference,
+                        theirReference: r.theirReference,
+                    })),
+                },
+                realm
+            );
+        if (isResponseBad(transferResponse)) {
+            throw new Error(
+                `not ok response while performing transfer for account: ${{
+                    accountId: fromAccountId,
+                    response: transferResponse,
+                }}`
+            );
+        }
+        return transferResponse.data.TransferResponses;
+    }
+
+    public async pay(
+        accountId: string,
+        recipients: Array<{
+            beneficiary: InvestecBeneficiary;
+            myReference: string;
+            theirReference: string;
+            amount: number;
+        }>,
+        realm: Realm = "private"
+    ): Promise<InvestecPayment[]> {
+        if (!this.token) {
+            throw new Error("client is not set up");
+        }
+        const transferResponse =
+            await this.ApiClient.postInvestecPayMultiple(
+                this.token.access_token,
+                {
+                    fromAccountId: accountId,
+                    toBeneficiaries: recipients.map((r) => ({
+                        beneficiaryId: r.beneficiary.beneficiaryId,
+                        amount: r.amount,
+                        myReference: r.myReference,
+                        theirReference: r.theirReference,
+                    })),
+                },
+                realm
+            );
+        if (isResponseBad(transferResponse)) {
+            throw new Error(
+                `not ok response while performing transfer for account: ${{
+                    accountId: accountId,
+                    response: transferResponse,
+                }}`
+            );
+        }
+        return transferResponse.data.TransferResponses;
     }
 
     public async getBeneficiaries(): Promise<InvestecBeneficiary[]> {
